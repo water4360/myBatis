@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- DAO를 찾기 위해선 패키지명을 씀 -->
+<mapper namespace="board.dao.BoardDAO">
+
+	<!-- BoardVO의 변수명과 DB의 컬럼명 맵핑시켜주기 -->
+	<resultMap type="board" id="boardMap">
+		<result column="VIEW_CNT" property="viewCnt" />
+		<result column="REG_DATE" property="regDate" />
+	</resultMap>
+	<sql id="selectBoard">
+		SELECT * FROM T_BOARD
+	</sql>
+
+
+	<!-- ${}는 stmt, #{}는 pstmt -->
+	<!-- 파라미터가 1개만 날아올땐 변수명 암거나 써도ㄱㅊ! 걍 String으로 맵핑됨. -->
+	<!-- 넘겨받는 매개변수 타입의 클래스명을 parameterType에 적어줘야. -->
+	<!-- 물론 myBatis-config.xml에서 alias 지정해줘서 패키지명.BoardVO 대신 board라고 쓸 수 있는 
+		것 -->
+	<insert id="insert" parameterType="board">
+		INSERT INTO T_BOARD(NO, TITLE,
+		WRITER)
+		VALUES(SEQ_T_BOARD_NO.NEXTVAL, #{ title }, #{ writer })
+	</insert>
+
+	<select id="selectAll2" resultMap="boardMap">
+		<include refid="selectBoard" />
+		ORDER BY NO DESC
+	</select>
+
+
+	<select id="selectAll" resultType="board">
+		SELECT NO, TITLE, WRITER,
+		CONTENT, VIEW_CNT AS viewCnt, REG_DATE AS regDate
+		FROM T_BOARD ORDER BY
+		NO DESC
+	</select>
+
+	<select id="selectByNo" parameterType="int" resultMap="boardMap">
+		<include refid="selectBoard" />
+		WHERE NO = #{ no }
+	</select>
+
+	<select id="selectByBoardNo" parameterType="board"
+		resultMap="boardMap">
+		<include refid="selectBoard" />
+		WHERE NO = #{ no }
+	</select>
+
+	<!-- 제목 또는 글쓴이 조건부 검색 -->
+	<select id="selectWhere" parameterType="board"
+		resultMap="boardMap">
+		<include refid="selectBoard" />
+		<where>
+			<if test="title != null">
+				TITLE = #{ title }
+			</if>
+			<if test="writer != null">
+				AND WRITER = #{ writer }
+			</if>
+		</where>
+	</select>
+
+
+	<select id="selectWhere2" parameterType="map"
+		resultMap="boardMap">
+		<include refid="selectBoard" />
+		<where>
+			<if test="title != null">
+				TITLE = #{ title }
+			</if>
+			<if test="writer != null">
+				AND WRITER = #{ writer }
+			</if>
+		</where>
+	</select>
+
+
+	<select id="selectWhere3" parameterType="map" resultType="map">
+		<include refid="selectBoard" />
+		<where>
+			no = #{ no }
+		</where>
+	</select>
+	
+	<!-- 위에서 int[], 밑에서 array.  -->
+	<select id="selectNos" parameterType="int[]" resultMap="boardMap">
+		<include refid="selectBoard"/>
+		WHERE NO IN
+			<foreach collection="array" item="bno" separator="," open="(" close=")">
+				#{ bno }
+			</foreach>
+	</select>
+
+
+
+
+</mapper>
